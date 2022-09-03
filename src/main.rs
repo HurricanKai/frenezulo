@@ -1,5 +1,9 @@
-use submillisecond::{router, Application, http::HeaderMap};
+use lunatic::{Mailbox, process::StartProcess};
 
+use crate::application::Application;
+mod encoding;
+mod application;
+/*
 fn index() -> &'static str {
     "Hello :)"
 }
@@ -21,12 +25,42 @@ fn headers(headers : HeaderMap) -> String {
             a.push('\n');
             a
         })
+}*/
+
+/*
+struct Service404;
+impl Service for Service404 {
+    fn request(&self, request : Request<Body>) -> Response<Vec<u8>> {
+        Response::builder()
+                .version(request.version())
+                .status(404)
+                .body("404!".as_bytes())
+                .expect("builder has to succeed")
+    }
+}*/
+
+/*
+fn handler(req: RequestContext) -> Response<Vec<u8>> {
+    let request = req.request;
+    Response::builder()
+        .version(request.version())
+        .status(404)
+        .body(format!("Unknown Service {}", request.uri().path()).into_bytes())
+        .expect("builder has to succeed")
+}*/
+
+fn start_app() {
+    Application::start((), None).link()
 }
 
-fn main() -> std::io::Result<()> {
-    Application::new(router! {
-        GET "/" => index
-        GET "/headers" => headers
-    })
-    .serve("0.0.0.0:3000")
+#[lunatic::main]
+fn main(mailbox: Mailbox<()>) {
+    start_app();
+
+    let failure_mailbox = mailbox.catch_link_failure();
+    loop {
+        let message = failure_mailbox.receive();
+        assert!(message.is_link_died());
+        start_app();
+    }
 }
