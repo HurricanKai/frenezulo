@@ -1,7 +1,7 @@
 use std::{io::{Write, Read}, error};
 
 use bytes::{BufMut, Buf};
-use submillisecond::{http::{Request, Method, Version, HeaderValue}, Body};
+use submillisecond::{http::{Request, Method, Version, HeaderValue}, Body, headers::HeaderName};
 pub fn serialize_request<'a>(request : Request<Body<'a>>) -> Result<Vec<u8>, Box<dyn error::Error>> {
     let (parts, body) = request.into_parts();
     let header_entry_count = parts.headers.len() as u64;
@@ -13,31 +13,32 @@ pub fn serialize_request<'a>(request : Request<Body<'a>>) -> Result<Vec<u8>, Box
     let uri_string = parts.uri.to_string();
     let total_len = 1 + 1 + 4 + uri_string.as_bytes().len() + 4 + header_bytes_count + 4 + body.len();
 
-    let mut buffer = Vec::<u8>::with_capacity(total_len);
+    let buffer = Vec::<u8>::with_capacity(total_len);
     let mut writer = buffer.writer();
-    writer.write(&[encode_method(parts.method).expect("method encoding")])?;
-    writer.write(&[encode_version(parts.version).expect("version encoding")])?;
-    writer.write(&(uri_string.as_bytes().len() as u64).to_le_bytes())?;
-    writer.write(uri_string.as_bytes())?;
-    writer.write(&(header_entry_count as u64).to_le_bytes())?;
+    writer.write_all(&[encode_method(parts.method).expect("method encoding")])?;
+    writer.write_all(&[encode_version(parts.version).expect("version encoding")])?;
+    writer.write_all(&(uri_string.as_bytes().len() as u64).to_le_bytes())?;
+    writer.write_all(uri_string.as_bytes())?;
+    writer.write_all(&(header_entry_count as u64).to_le_bytes())?;
     for (k, v) in parts.headers.iter() {
         let k_bytes = k.as_str().as_bytes();
-        writer.write(&(k_bytes.len() as u64).to_le_bytes())?;
-        writer.write(k_bytes)?;
+        writer.write_all(&(k_bytes.len() as u64).to_le_bytes())?;
+        writer.write_all(k_bytes)?;
         let v_bytes = v.as_bytes();
-        writer.write(&(v_bytes.len() as u64).to_le_bytes())?;
-        writer.write(v_bytes)?;
+        writer.write_all(&(v_bytes.len() as u64).to_le_bytes())?;
+        writer.write_all(v_bytes)?;
     }
-    writer.write(&(body.len() as u64).to_le_bytes())?;
-    writer.write(body.as_slice())?;
-    Ok(buffer)
+    writer.write_all(&(body.len() as u64).to_le_bytes())?;
+    writer.write_all(body.as_slice())?;
+    writer.flush()?;
+    Ok(writer.into_inner())
 }
 
 pub fn deserialize_request<'a>(data: &'a [u8]) -> Result<Request<Vec<u8>>, Box<dyn error::Error>> {
     let mut builder = Request::builder();
     let mut reader = data.reader();
-    let num_bytes = [0u8; 8];
-    let single_byte = [0u8; 1];
+    let mut num_bytes = [0u8; 8];
+    let mut single_byte = [0u8; 1];
     reader.read_exact(&mut single_byte)?;
     let method = decode_method(single_byte[0]).expect("method decoding");
     builder = builder.method(method);
@@ -48,34 +49,33 @@ pub fn deserialize_request<'a>(data: &'a [u8]) -> Result<Request<Vec<u8>>, Box<d
     
     reader.read_exact(&mut num_bytes)?;
     let uri_string_bytes_length = u64::from_le_bytes(num_bytes) as usize;
-    let uri_string_bytes = Vec::<u8>::with_capacity(uri_string_bytes_length);
+    let mut uri_string_bytes = Vec::<u8>::with_capacity(uri_string_bytes_length);
     reader.read_exact(&mut uri_string_bytes)?;
     let uri_string = String::from_utf8(uri_string_bytes)?;
     builder = builder.uri(uri_string);
     
     reader.read_exact(&mut num_bytes)?;
     let header_entry_count = u64::from_le_bytes(num_bytes) as usize;
-    let &mut headers = builder.headers_mut().expect("headers");
+    let headers: &mut submillisecond::http::HeaderMap = builder.headers_mut().expect("headers");
     headers.reserve(header_entry_count - headers.capacity());
-    for i in 0..header_entry_count {
+    for _ in 0..header_entry_count {
         reader.read_exact(&mut num_bytes)?;
         let k_length = u64::from_le_bytes(num_bytes) as usize;
 
-        let k_bytes = Vec::<u8>::with_capacity(k_length);
+        let mut k_bytes = Vec::<u8>::with_capacity(k_length);
         reader.read_exact(&mut k_bytes)?;
-        let k = String::from_utf8(k_bytes)?;
         
         reader.read_exact(&mut num_bytes)?;
         let v_length = u64::from_le_bytes(num_bytes) as usize;
 
-        let v_bytes = Vec::<u8>::with_capacity(v_length);
+        let mut v_bytes = Vec::<u8>::with_capacity(v_length);
         reader.read_exact(&mut v_bytes)?;
 
-        headers.insert::<&str>(k.as_ref(), HeaderValue::from_maybe_shared(v_bytes)?);
+        headers.insert::<HeaderName>(HeaderName::from_bytes(&k_bytes)?, HeaderValue::from_maybe_shared(v_bytes)?);
     };
     reader.read_exact(&mut num_bytes)?;
     let body_length = u64::from_le_bytes(num_bytes) as usize;
-    let body_buffer = Vec::<u8>::with_capacity(body_length);
+    let mut body_buffer = Vec::<u8>::with_capacity(body_length);
     reader.read_exact(&mut body_buffer)?;
     Ok(builder.body(body_buffer)?)
 }
