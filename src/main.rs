@@ -1,7 +1,7 @@
 use lunatic::{Mailbox, process::StartProcess};
 
 use crate::application::Application;
-mod encoding;
+mod http;
 mod application;
 /*
 fn index() -> &'static str {
@@ -50,7 +50,7 @@ fn handler(req: RequestContext) -> Response<Vec<u8>> {
 }*/
 
 fn start_app() {
-    Application::start((), None).link()
+    Application::start_link((), None);
 }
 
 #[lunatic::main]
