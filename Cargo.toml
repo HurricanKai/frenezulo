@@ -6,8 +6,11 @@ edition = "2021"
 [dependencies]
 bytes = "1.2.1"
 generic_error = "0.2.0"
-lunatic = "0.11.1"
+lunatic = { version = "0.11.1", features = ["json_serializer"]}
 multimap = "0.8.3"
 serde = "1.0.144"
 serde_bytes = "0.11.7"
 submillisecond = "0.2.0-alpha0"
+
+[patch.crates-io]
+lunatic = { path = "../lunatic-rs"}

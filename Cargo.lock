@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "aho-corasick"
-version = "0.7.18"
+version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e37cfd5e7657ada45f742d6e99ca5788580b5c529dc78faf11ece6dc702656f"
+checksum = "b4f55bd91a0978cbfd91c457a164bab8b4001c833b7f323132c0a4e1922dd44e"
 dependencies = [
  "memchr",
 ]
@@ -200,9 +200,9 @@ checksum = "c58479cc50cf834e32283d0c8c7a5660b79061c9f0b1fd82e0aa5322ee23cb70"
 
 [[package]]
 name = "headers"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cff78e5788be1e0ab65b04d306b2ed5092c815ec97ec70f4ebd5aee158aa55d"
+checksum = "f3e372db8e5c0d213e0cd0b9be18be2aca3d44cf2fe30a9d46a65581cd454584"
 dependencies = [
  "base64",
  "bitflags",
@@ -211,7 +211,7 @@ dependencies = [
  "http",
  "httpdate",
  "mime",
- "sha-1",
+ "sha1",
 ]
 
 [[package]]
@@ -310,7 +310,7 @@ checksum = "dbb5cb5f8c3597fb08fdacc13ee41f24effbc0a1988262d122b5f52ecbef74ed"
 dependencies = [
  "bincode",
  "lunatic-macros 0.10.1",
- "lunatic-test",
+ "lunatic-test 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "paste",
  "serde",
  "thiserror",
@@ -319,14 +319,13 @@ dependencies = [
 [[package]]
 name = "lunatic"
 version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f8145992cdc69db5cbb16250a45e5ef1b0c48dc1691388fbe0fe28c0cc80532"
 dependencies = [
  "bincode",
  "lunatic-macros 0.11.0",
- "lunatic-test",
+ "lunatic-test 0.10.1",
  "paste",
  "serde",
+ "serde_json",
  "thiserror",
 ]
 
@@ -357,11 +356,17 @@ dependencies = [
 [[package]]
 name = "lunatic-macros"
 version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c54cfabfb38a02c44aff1bce0084edbae9906e102c4409b3f9304295b0ec8615"
 dependencies = [
  "convert_case",
  "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "lunatic-test"
+version = "0.10.1"
+dependencies = [
  "quote",
  "syn",
 ]
@@ -513,6 +518,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4501abdff3ae82a1c1b477a17252eb69cee9e66eb915c1abaa4f44d873df9f09"
+
+[[package]]
 name = "serde"
 version = "1.0.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -542,10 +553,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha-1"
-version = "0.10.0"
+name = "serde_json"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "028f48d513f9678cda28f6e4064755b3fbb2af6acd672f2c209b62323f7aea0f"
+checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
+name = "sha1"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "006769ba83e921b3085caa8334186b00cf92b4cb1a6cf4632fbccc8eff5c7549"
 dependencies = [
  "cfg-if",
  "cpufeatures",

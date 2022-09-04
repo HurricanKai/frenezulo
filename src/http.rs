@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use multimap::MultiMap;
 use serde::{Serialize, Deserialize};
 use submillisecond::http::StatusCode;
@@ -18,7 +20,21 @@ impl std::convert::From<submillisecond::http::Request<Vec<u8>>> for Request {
 
 impl std::convert::From<Request> for submillisecond::http::Request<Vec<u8>> {
     fn from(source: Request) -> Self {
-        Self::from_parts(source.metadata.into(), source.body.into_vec())
+        let mut blank = Self::new(source.body.into_vec());
+        *blank.method_mut() =  source.metadata.method.into();
+        *blank.uri_mut() = source.metadata.uri.parse::<submillisecond::http::Uri>().expect("Parsing has to succeed");
+        *blank.version_mut() = source.metadata.version.into();
+        *blank.headers_mut() = source.metadata.headers.iter()
+                .map(|(k, v)| {
+                    (submillisecond::headers::HeaderName::from_str(&k.to_owned()).expect("Header name has to be valid"),
+                    submillisecond::headers::HeaderValue::from_bytes(v).expect("Header value has to be valid"))
+                })
+                .fold(submillisecond::headers::HeaderMap::new(), |mut m, (k, v)| {
+                    m.insert(k, v);
+                    m
+                });
+
+        blank
     }
 }
 
@@ -37,7 +53,21 @@ impl std::convert::From<submillisecond::http::Response<Vec<u8>>> for Response {
 
 impl std::convert::From<Response> for submillisecond::http::Response<Vec<u8>> {
     fn from(source: Response) -> Self {
-        Self::from_parts(source.metadata.into(), source.body.into_vec())
+        let mut blank = Self::new(source.body.into_vec());
+        *blank.status_mut() = StatusCode::from_u16(source.metadata.status).expect("status code has to be valid");
+        *blank.version_mut() = source.metadata.version.into();
+
+        let headers = source.metadata.headers.iter()
+                .map(|(k, v)| {
+                    (submillisecond::headers::HeaderName::from_str(&k.to_owned()).expect("Header name has to be valid"),
+                    submillisecond::headers::HeaderValue::from_bytes(v).expect("Header value has to be valid"))
+                })
+                .fold(submillisecond::headers::HeaderMap::new(), |mut m, (k, v)| {
+                    m.insert(k, v);
+                    m
+                });
+        *blank.headers_mut() = headers;
+        blank
     }
 }
 
@@ -67,27 +97,6 @@ impl std::convert::From<submillisecond::http::request::Parts> for RequestMetadat
     }
 }
 
-impl std::convert::From<RequestMetadata> for submillisecond::http::request::Parts {
-    fn from(parts: RequestMetadata) -> Self {
-        Self { 
-            method: parts.method.into(),
-            uri: parts.uri.parse::<submillisecond::http::Uri>().expect("Parsing has to succeed"),
-            version: parts.version.into(),
-            headers: parts.headers.iter()
-                .map(|(k, v)| {
-                    (submillisecond::headers::HeaderName::from_static(k),
-                    submillisecond::headers::HeaderValue::from_maybe_shared(v).expect("Header value has to be valid"))
-                })
-                .fold(submillisecond::headers::HeaderMap::new(), |mut m, (k, v)| {
-                    m.insert(k, v);
-                    m
-                }),
-            extensions: Default::default(),
-            _priv: ()
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ResponseMetadata {
     pub status: u16,
@@ -108,26 +117,6 @@ impl std::convert::From<submillisecond::http::response::Parts> for ResponseMetad
                     m.insert(k, serde_bytes::ByteBuf::from(v));
                     m
                 })
-        }
-    }
-}
-
-impl std::convert::From<ResponseMetadata> for submillisecond::http::response::Parts {
-    fn from(parts: ResponseMetadata) -> Self {
-        Self { 
-            status: StatusCode::from_u16(parts.status).expect("has to be valid"),
-            version: parts.version.into(),
-            headers: parts.headers.iter()
-                .map(|(k, v)| {
-                    (submillisecond::headers::HeaderName::from_static(k),
-                    submillisecond::headers::HeaderValue::from_maybe_shared(v).expect("Header value has to be valid"))
-                })
-                .fold(submillisecond::headers::HeaderMap::new(), |mut m, (k, v)| {
-                    m.insert(k, v);
-                    m
-                }),
-            extensions: Default::default(),
-            _priv: ()
         }
     }
 }
@@ -173,8 +162,7 @@ impl std::convert::From<Method> for submillisecond::http::Method {
             Method::Head => submillisecond::http::Method::HEAD,
             Method::Trace => submillisecond::http::Method::TRACE,
             Method::Connect => submillisecond::http::Method::CONNECT,
-            Method::Patch => submillisecond::http::Method::PATCH,
-            _ => panic!("Invalid HTTP Method")
+            Method::Patch => submillisecond::http::Method::PATCH
         }
     }
 }
@@ -208,8 +196,7 @@ impl std::convert::From<Version> for submillisecond::http::Version {
             Version::Http10 => submillisecond::http::Version::HTTP_10,
             Version::Http11 => submillisecond::http::Version::HTTP_11,
             Version::Http2 => submillisecond::http::Version::HTTP_2,
-            Version::Http3 => submillisecond::http::Version::HTTP_3,
-            _ => panic!("Invalid HTTP Version")
+            Version::Http3 => submillisecond::http::Version::HTTP_3
         }
     }
 }
