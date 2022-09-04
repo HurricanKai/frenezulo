@@ -23,6 +23,7 @@ pub struct ServiceRegistry {
 
 impl ServiceRegistry {
     pub fn start_request(&mut self, service_id: ServiceId, request_id: RequestId, request: Request, respond_to: RespondTo) {
+        println!("service registry starting request");
         match self.services.get_mut(&service_id) {
             Some((process, requests)) => {
                 requests.insert(request_id, (request.clone(), respond_to));
@@ -34,6 +35,7 @@ impl ServiceRegistry {
                 panic!("Invalid Service Id")
             }
         }
+        println!("service registry handoff to module done");
     }
 
     pub fn cancel_request(&mut self, service_id: ServiceId, request_id: RequestId) {
@@ -90,8 +92,7 @@ impl ServiceRegistry {
 
     pub fn complete_request(&mut self, request_id: RequestId, service_id: ServiceId, response: Response) {
         match self.services.get_mut(&service_id) {
-            Some((worker, table)) => {
-                worker.kill();
+            Some((_worker, table)) => {
                 match table.remove(&request_id) {
                     Some((_request_id, respond_to)) => {
                         respond_to.send(response);
@@ -106,7 +107,9 @@ impl ServiceRegistry {
 
 pub fn start() -> Process<ServiceRegistryMessage> {
     Process::spawn_link((), |(), mailbox: Mailbox<ServiceRegistryMessage>| {
+        println!("service registry started");
         mailbox.this().register("service_registry");
+        println!("service registry registered");
         let mut instance = ServiceRegistry {
             services: HashMap::new()
         };
@@ -114,7 +117,10 @@ pub fn start() -> Process<ServiceRegistryMessage> {
         let mailbox = mailbox.catch_link_failure();
 
         loop {
-            match mailbox.receive() {
+            println!("service registry loop");
+            let msg = mailbox.receive();
+            println!("service registry received msg {} {} {}", msg.is_link_died(), msg.is_timed_out(), msg.is_message());
+            match msg {
                 lunatic::MailboxResult::Message(msg) => match msg {
                     ServiceRegistryMessage::StartRequest(request_id, service_id, request, respond_to) =>
                         instance.start_request(service_id, request_id, request, respond_to),
@@ -129,7 +135,7 @@ pub fn start() -> Process<ServiceRegistryMessage> {
                 },
                 lunatic::MailboxResult::DeserializationFailed(_) => todo!(),
                 lunatic::MailboxResult::TimedOut => todo!(),
-                lunatic::MailboxResult::LinkDied(_) => todo!(), // Tag == service_id.tag
+                lunatic::MailboxResult::LinkDied(_) => todo!("handle module supervisor crashes"), // Tag == service_id.tag
             }
         }
     })

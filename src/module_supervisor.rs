@@ -1,7 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use frenezulo::WorkerMessage;
-use lunatic::{WasmModule, Process, LunaticError, ProcessConfig, Tag, Mailbox};
+use lunatic::{WasmModule, Process, LunaticError, ProcessConfig, Tag, Mailbox, process::ProcessRef};
 use serde::{Serialize, Deserialize};
 
 use crate::{service_registry::ServiceRegistryMessage};
@@ -31,7 +31,8 @@ impl ModuleSupervisor {
         let mut config = ProcessConfig::new().expect("needs to be able to create configs");
         config.set_max_memory(1024 * 1024 * 1024);
 
-        let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config_tag::<WorkerMessage, WorkerSerializer>("random_bullshit_go", Some(&config), None, &[]);
+        let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config_tag::<WorkerMessage, WorkerSerializer>(
+            "random_bullshit_go", Some(&config), Some(request_id.tag), &[]);
         match new_worker {
             Ok(worker) => {
                 self.outstanding_requests.insert(request_id, worker.clone());
@@ -53,7 +54,7 @@ impl ModuleSupervisor {
     pub fn cancel_request(&mut self, request_id: RequestId) {
         match self.outstanding_requests.remove(&request_id) {
             Some(worker) => {
-                worker.unlink();
+                println!("killing worker");
                 worker.kill();
             }
             None => ()
@@ -63,9 +64,10 @@ impl ModuleSupervisor {
     pub fn complete_request(&mut self, request_id: RequestId, response: Response) {
         match self.outstanding_requests.remove(&request_id) {
             Some(worker) => {
-                worker.unlink();
-                worker.kill();
+                println!("Sending message to supervisor to complete");
                 self.respond(request_id, response);
+                println!("killing worker");
+                worker.kill();
             }
             None => ()
         }
@@ -74,20 +76,25 @@ impl ModuleSupervisor {
 
 pub type WorkerSerializer = frenezulo::module_supervisor::WorkerSerializer;
 pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: Process<ServiceRegistryMessage>) -> Process<ModuleSupervisorMessage, WorkerSerializer> {
+    println!("starting module supervisor");
     let mut config = ProcessConfig::new().expect("needs to be able to create configs");
     config.set_can_spawn_processes(true);
     config.set_can_create_configs(true);
     config.set_can_compile_modules(true);
 
-    
-    Process::spawn_link_config_tag(&config, (service_id, module_data, supervisor), tag, |(service_id, module_data, supervisor),
-        mailbox: Mailbox<ModuleSupervisorMessage, WorkerSerializer>| 
+    println!("spawning module supervisor");
+    Process::spawn_link_config_tag(&config, (service_id, module_data, supervisor), tag,
+    |(service_id, module_data, supervisor), mailbox: Mailbox<ModuleSupervisorMessage, WorkerSerializer>| 
     {
+        let me = mailbox.this();
+        let mailbox = mailbox.catch_link_failure();
+        println!("compiling module {me:?}");
         let module = WasmModule::new(&module_data);
         if let Err(e) = module {
             println!("Failed to compile {e:?}");
             panic!("Failed to compile {e:?}");
         }
+        println!("done compiling");
         
         let mut instance = ModuleSupervisor {
             service_id,
@@ -95,10 +102,9 @@ pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: 
             module: module.unwrap(),
             outstanding_requests: HashMap::new()
         };
-        let mailbox = mailbox.catch_link_failure();
 
         loop {
-            println!("module supervisor loop head");
+            println!("module supervisor loop");
             match mailbox.try_receive(Duration::MAX) {
                 lunatic::MailboxResult::Message(msg) =>
                     match msg {
@@ -109,9 +115,18 @@ pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: 
                         ModuleSupervisorMessage::CompleteRequest(request_id, response) =>
                             instance.complete_request(request_id, response),
                     },
-                lunatic::MailboxResult::DeserializationFailed(err) => panic!("Deserialization Failed {err:?}"),
+                lunatic::MailboxResult::DeserializationFailed(err) => {println!("Deserialization Failed {err:?}"); panic!("Deserialization Failed {err:?}");},
                 lunatic::MailboxResult::TimedOut => todo!(),
-                lunatic::MailboxResult::LinkDied(_) => todo!(),
+                lunatic::MailboxResult::LinkDied(tag) => {
+                    println!("Module Link Died {tag:?}");
+                    let request_id = RequestId { tag };
+                    match instance.outstanding_requests.remove(&request_id) {
+                        Some(_worker) => {
+                            instance.supervisor.send(ServiceRegistryMessage::CancelRequest(request_id, service_id));
+                        },
+                        None => ()
+                    }
+                },
             }
         }
     })

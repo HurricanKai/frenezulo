@@ -21,7 +21,7 @@ pub mod module_supervisor {
         CompleteRequest(crate::RequestId, crate::http::Response)
     }
 
-    pub type WorkerSerializer = lunatic::serializer::Json;
+    pub type WorkerSerializer = lunatic::serializer::MessagePack;
 }
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
