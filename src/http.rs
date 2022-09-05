@@ -41,19 +41,20 @@ impl std::convert::From<Request> for submillisecond::http::Request<Vec<u8>> {
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Response {
     pub metadata: ResponseMetadata,
-    pub body: serde_bytes::ByteBuf,
+    #[serde(with = "serde_bytes")]
+    pub body: Vec<u8>,
 }
 
 impl std::convert::From<submillisecond::http::Response<Vec<u8>>> for Response {
     fn from(source: submillisecond::http::Response<Vec<u8>>) -> Self {
         let (parts, body) = source.into_parts();
-        Self { metadata: ResponseMetadata::from(parts), body: serde_bytes::ByteBuf::from(body) }
+        Self { metadata: ResponseMetadata::from(parts), body: body }
     }
 }
 
 impl std::convert::From<Response> for submillisecond::http::Response<Vec<u8>> {
     fn from(source: Response) -> Self {
-        let mut blank = Self::new(source.body.into_vec());
+        let mut blank = Self::new(source.body);
         *blank.status_mut() = StatusCode::from_u16(source.metadata.status).expect("status code has to be valid");
         *blank.version_mut() = source.metadata.version.into();
 

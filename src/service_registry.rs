@@ -23,7 +23,6 @@ pub struct ServiceRegistry {
 
 impl ServiceRegistry {
     pub fn start_request(&mut self, service_id: ServiceId, request_id: RequestId, request: Request, respond_to: RespondTo) {
-        println!("service registry starting request");
         match self.services.get_mut(&service_id) {
             Some((process, requests)) => {
                 requests.insert(request_id, (request.clone(), respond_to));
@@ -35,7 +34,6 @@ impl ServiceRegistry {
                 panic!("Invalid Service Id")
             }
         }
-        println!("service registry handoff to module done");
     }
 
     pub fn cancel_request(&mut self, service_id: ServiceId, request_id: RequestId) {
@@ -117,9 +115,7 @@ pub fn start() -> Process<ServiceRegistryMessage> {
         let mailbox = mailbox.catch_link_failure();
 
         loop {
-            println!("service registry loop");
             let msg = mailbox.receive();
-            println!("service registry received msg {} {} {}", msg.is_link_died(), msg.is_timed_out(), msg.is_message());
             match msg {
                 lunatic::MailboxResult::Message(msg) => match msg {
                     ServiceRegistryMessage::StartRequest(request_id, service_id, request, respond_to) =>

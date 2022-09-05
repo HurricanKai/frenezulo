@@ -10,7 +10,7 @@ pub struct Router(HashMap<String, ServiceId>);
 #[abstract_process]
 impl Router {
     #[init]
-    fn init(selfRef: ProcessRef<Self>, _: ()) -> Self {
+    fn init(_: ProcessRef<Self>, _: ()) -> Self {
         Self(HashMap::new())
     } 
 
@@ -27,16 +27,14 @@ impl Router {
     fn add_service(&mut self, prefix: String, data: serde_bytes::ByteBuf) -> ServiceId {
         let id = ServiceId { tag: Tag::new() };
         self.0.insert(prefix.clone(), id);
-        service_registry::add_service(id, data.into_vec());  
+        service_registry::add_service(id, data.into_vec());
         println!("Registered service {prefix:?} {id:?}");
         id
     }
 
     #[handle_request]
     fn create_request(&self, prefix: String) -> Option<(ServiceId, RequestId)> {
-        println!("Creating Request for {prefix:?}");
         let service_id = self.0.get(&prefix)?;
-        println!("Found service id for {prefix:?} {service_id:?}");
         let request_id = RequestId {
             tag: Tag::new()
         };

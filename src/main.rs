@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use lunatic::{Mailbox, process::StartProcess, sleep};
+use lunatic::{Mailbox, process::StartProcess};
 use crate::application::Application;
 mod http;
 mod module_supervisor;
@@ -57,7 +55,11 @@ fn handler(req: RequestContext) -> Response<Vec<u8>> {
 
 fn start_app() {
     Application::start_link((), None);
-    router::add_service("test".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
+    router::add_service("test1".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
+    router::add_service("test2".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
+    router::add_service("test3".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
+    router::add_service("test4".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
+    router::add_service("test5".to_owned(), std::fs::read("./test.wasm").expect("File has to exist"));
 }
 
 #[lunatic::main]

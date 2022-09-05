@@ -14,3 +14,4 @@ submillisecond = "0.2.0-alpha0"
 
 [patch.crates-io]
 lunatic = { path = "../lunatic-rs"}
+submillisecond = { path = "../../submillisecond" }

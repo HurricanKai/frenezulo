@@ -26,7 +26,6 @@ impl Listener {
             _ => None
         };
         
-        println!("resolving prefix");
         match prefix {
             Some(prefix) => match create_request(prefix.to_owned()) {
                 Some((service_id, request_id)) =>{
@@ -37,7 +36,6 @@ impl Listener {
                         body: serde_bytes::ByteBuf::from(b.as_slice().to_vec())
                     };
                     
-                    println!("calling service registry");
                     service_registry::start_request(request_id, service_id, req, Process::this());
                     match mailbox.receive_timeout(Duration::from_secs(30)) {
                         lunatic::MailboxResult::Message(response) => response.into(),

@@ -1,7 +1,8 @@
 use std::{collections::HashMap, time::Duration};
 
-use frenezulo::WorkerMessage;
-use lunatic::{WasmModule, Process, LunaticError, ProcessConfig, Tag, Mailbox, process::ProcessRef};
+use frenezulo::{WorkerMessage, http::{Version, ResponseMetadata}};
+use lunatic::{WasmModule, Process, LunaticError, ProcessConfig, Tag, Mailbox};
+use multimap::MultiMap;
 use serde::{Serialize, Deserialize};
 
 use crate::{service_registry::ServiceRegistryMessage};
@@ -26,8 +27,17 @@ impl ModuleSupervisor {
         self.supervisor.send(ServiceRegistryMessage::CompleteRequest(request_id, self.service_id, response));
     }
 
-    const MODULE_TIMEOUT : Duration = Duration::from_millis(30);
     pub fn start_request(&mut self, request_id: RequestId, request: Request) {
+        static MODULE_TIMEOUT : Duration = Duration::from_millis(30);
+        let timeout_response : Response = Response {
+            metadata: ResponseMetadata {
+                headers: MultiMap::new(),
+                status: 504,
+                version: Version::Http11
+            },
+            body: "Service timed out".to_owned().into_bytes()
+        };
+
         let mut config = ProcessConfig::new().expect("needs to be able to create configs");
         config.set_max_memory(1024 * 1024 * 1024);
 
@@ -37,8 +47,7 @@ impl ModuleSupervisor {
             Ok(worker) => {
                 self.outstanding_requests.insert(request_id, worker.clone());
                 worker.send(WorkerMessage::Request(request_id, request, Process::this()));
-                // todo!("Cancel Request (non-failure, still produce a result) after MODULE_TIMEOUT");
-                // self.supervisor.send_after(ServiceRegistryMessage::CancelRequest(request_id, self.service_id), MODULE_TIMEOUT);
+                self.supervisor.send_after(ServiceRegistryMessage::CompleteRequest(request_id, self.service_id, timeout_response), MODULE_TIMEOUT);
             },
             Err(err) => {
                 println!("Failed to start worker {err:?}");
@@ -54,7 +63,6 @@ impl ModuleSupervisor {
     pub fn cancel_request(&mut self, request_id: RequestId) {
         match self.outstanding_requests.remove(&request_id) {
             Some(worker) => {
-                println!("killing worker");
                 worker.kill();
             }
             None => ()
@@ -64,9 +72,7 @@ impl ModuleSupervisor {
     pub fn complete_request(&mut self, request_id: RequestId, response: Response) {
         match self.outstanding_requests.remove(&request_id) {
             Some(worker) => {
-                println!("Sending message to supervisor to complete");
                 self.respond(request_id, response);
-                println!("killing worker");
                 worker.kill();
             }
             None => ()
@@ -104,7 +110,6 @@ pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: 
         };
 
         loop {
-            println!("module supervisor loop");
             match mailbox.try_receive(Duration::MAX) {
                 lunatic::MailboxResult::Message(msg) =>
                     match msg {
@@ -118,7 +123,6 @@ pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: 
                 lunatic::MailboxResult::DeserializationFailed(err) => {println!("Deserialization Failed {err:?}"); panic!("Deserialization Failed {err:?}");},
                 lunatic::MailboxResult::TimedOut => todo!(),
                 lunatic::MailboxResult::LinkDied(tag) => {
-                    println!("Module Link Died {tag:?}");
                     let request_id = RequestId { tag };
                     match instance.outstanding_requests.remove(&request_id) {
                         Some(_worker) => {

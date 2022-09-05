@@ -588,8 +588,6 @@ dependencies = [
 [[package]]
 name = "submillisecond"
 version = "0.2.0-alpha0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9083fe6f06ae434ff1ca321793aa623e55db96fdc7403b17ecf8cfd9ddf3118a"
 dependencies = [
  "ansi_term",
  "headers",
@@ -608,8 +606,6 @@ dependencies = [
 [[package]]
 name = "submillisecond_macros"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75ffeee94bce7c03e55751a55aba375e2ff052efbf3f06712d27be5b7b6ed579"
 dependencies = [
  "better-bae",
  "lazy_static",
