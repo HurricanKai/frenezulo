@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use lunatic::{abstract_process, process::ProcessRef, Tag, Process, Mailbox};
-use submillisecond::{Application, RequestContext, http::Response};
+use submillisecond::{Application, RequestContext, http::Response, headers::{Header, HeaderMapExt}};
 
 use crate::{service_registry};
 
 use super::router::create_request;
 
-pub struct Listener(Process<()>);
+pub struct Listener(Process<submillisecond::AppMessage>);
 
 #[abstract_process]
 impl Listener {
@@ -26,7 +26,7 @@ impl Listener {
             _ => None
         };
         
-        match prefix {
+        let mut response = match prefix {
             Some(prefix) => match create_request(prefix.to_owned()) {
                 Some((service_id, request_id)) =>{
                     let (m, b) = request.into_parts();
@@ -57,17 +57,17 @@ impl Listener {
                     .version(request.version())
                     .status(404)
                     .body(b"Path did not include service prefix".to_vec()).expect("404 builder has to succeed")
-        }
+        };
+
+        // for testing: restart requests after each HTTP request
+        // response.headers_mut().typed_insert(submillisecond::headers::Connection::close());
+
+        response
     }
 
     #[init]
     fn init(_: ProcessRef<Self>, _: ()) -> Self {
-        let process = Process::spawn_link((), |(), _:Mailbox<()>| {
-            Application
-                ::new(Self::handler as fn(_) -> _)
-                .serve("0.0.0.0:3000")
-                .expect("failed to start server");
-        });
+        let process = submillisecond::run(Self::handler as fn(_) -> _, "0.0.0.0:3000".to_owned(), 1000);
         Self(process)
     }
 
