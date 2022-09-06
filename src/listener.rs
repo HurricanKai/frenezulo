@@ -1,17 +1,20 @@
 use std::time::Duration;
 
-use lunatic::{abstract_process, process::ProcessRef, Tag, Process, Mailbox};
-use submillisecond::{Application, RequestContext, http::Response, headers::{Header, HeaderMapExt}};
+use lunatic::{abstract_process, process::ProcessRef, Tag, Process, Mailbox, spawn_link};
+use serde::{Serialize, Deserialize};
+use submillisecond::{Application, RequestContext, http::Response, Handler, headers::HeaderMapExt};
 
-use crate::{service_registry};
+use crate::{service_registry, router};
 
-use super::router::create_request;
+pub struct Listener(Process<()>);
 
-pub struct Listener(Process<submillisecond::AppMessage>);
+#[derive(Serialize, Deserialize, Clone, Copy)]
+struct AppHandler {
 
-#[abstract_process]
-impl Listener {
-    fn handler(context : RequestContext) -> Response<Vec<u8>> {
+}
+
+impl Handler for AppHandler {
+    fn handle(&self, context: RequestContext) -> submillisecond::response::Response {
         let request = context.request;
         // let mailbox : Mailbox<crate::http::Response> = context.mailbox;
         let mailbox : Mailbox<crate::http::Response> = unsafe { Mailbox::new() };
@@ -27,7 +30,7 @@ impl Listener {
         };
         
         let mut response = match prefix {
-            Some(prefix) => match create_request(prefix.to_owned()) {
+            Some(prefix) => match router::create_request(prefix.to_owned()) {
                 Some((service_id, request_id)) =>{
                     let (m, b) = request.into_parts();
                     let req = frenezulo::http::Request
@@ -60,14 +63,19 @@ impl Listener {
         };
 
         // for testing: restart requests after each HTTP request
-        // response.headers_mut().typed_insert(submillisecond::headers::Connection::close());
+        response.headers_mut().typed_insert(submillisecond::headers::Connection::close());
 
         response
     }
+}
 
+#[abstract_process]
+impl Listener {
     #[init]
     fn init(_: ProcessRef<Self>, _: ()) -> Self {
-        let process = submillisecond::run(Self::handler as fn(_) -> _, "0.0.0.0:3000".to_owned(), 1000);
+        let process = spawn_link!(|| {
+            Application::new_custom(AppHandler { }).serve("0.0.0.0:3000").expect("Server has to start");
+        });
         Self(process)
     }
 
