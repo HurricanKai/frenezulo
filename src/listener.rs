@@ -29,7 +29,7 @@ impl Handler for AppHandler {
             _ => None
         };
         
-        let mut response = match prefix {
+        let response = match prefix {
             Some(prefix) => match router::create_request(prefix.to_owned()) {
                 Some((service_id, request_id)) =>{
                     let (m, b) = request.into_parts();
@@ -63,7 +63,7 @@ impl Handler for AppHandler {
         };
 
         // for testing: restart requests after each HTTP request
-        response.headers_mut().typed_insert(submillisecond::headers::Connection::close());
+        // response.headers_mut().typed_insert(submillisecond::headers::Connection::close());
 
         response
     }
