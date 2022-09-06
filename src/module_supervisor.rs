@@ -42,7 +42,7 @@ impl ModuleSupervisor {
         config.set_max_memory(1024 * 1024 * 4); // 4kb
 
         let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config_tag::<WorkerMessage, WorkerSerializer>(
-            "random_bullshit_go", Some(&config), Some(request_id.tag), &[]);
+            "frenezulo_main", Some(&config), Some(request_id.tag), &[]);
         match new_worker {
             Ok(worker) => {
                 self.outstanding_requests.insert(request_id, worker.clone());

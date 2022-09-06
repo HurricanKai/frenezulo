@@ -24,4 +24,5 @@ submillisecond = { path = "../submillisecond" }
 [workspace]
 members = [
     "services/hello-world-service",
+    "services/js-host",
 ]

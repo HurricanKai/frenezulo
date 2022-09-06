@@ -2,8 +2,8 @@ use frenezulo::{ModuleSupervisorMessage, Response, ResponseMetadata, WorkerSeria
 use lunatic::Mailbox;
 
 
-#[export_name = "random_bullshit_go"]
-extern "C" fn random_bullshit_go() {
+#[export_name = "frenezulo_main"]
+extern "C" fn frenezulo_main() {
     run(unsafe { Mailbox::<frenezulo::WorkerMessage, WorkerSerializer>::new() })
 }
 
