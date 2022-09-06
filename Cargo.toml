@@ -2,6 +2,11 @@
 name = "frenezulo"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/HurricanKai/frenezulo"
+categories = ["wasm", "lunatic"]
+license = "MIT"
+authors = ["Kai Jellinghaus <contact@kaij.tech>"]
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.64"
@@ -15,3 +20,8 @@ submillisecond = { version = "0.2.0-alpha0", features = ["json"]}
 [patch.crates-io]
 lunatic = { path = "../lunatic-rs"}
 submillisecond = { path = "../submillisecond" }
+
+[workspace]
+members = [
+    "services/hello-world-service",
+]
