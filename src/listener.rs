@@ -132,7 +132,7 @@ impl Handler for AppHandler {
                 Some((service_id, request_id)) => {
                     let request = context.request;
                     let (m, b) = request.into_parts();
-                    let req = frenezulo::http::Request
+                    let req = frenezulo::Request
                     {
                         metadata: m.into(),
                         body: serde_bytes::ByteBuf::from(b.as_slice().to_vec())

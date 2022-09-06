@@ -4,7 +4,7 @@ use lunatic::{Process, Mailbox};
 use serde::{Serialize, Deserialize};
 
 use crate::{module_supervisor::{ModuleSupervisorMessage, self}};
-use frenezulo::{ ServiceId, RequestId, http::{Request, Response}};
+use frenezulo::{ ServiceId, RequestId, Request, Response, WorkerSerializer };
 
 type RespondTo = Process<Response>;
 
@@ -18,7 +18,7 @@ pub enum ServiceRegistryMessage {
 }
 
 pub struct ServiceRegistry {
-    services: HashMap<ServiceId, (Process<ModuleSupervisorMessage, crate::module_supervisor::WorkerSerializer>, HashMap<RequestId, (Request, RespondTo)>)>
+    services: HashMap<ServiceId, (Process<ModuleSupervisorMessage, WorkerSerializer>, HashMap<RequestId, (Request, RespondTo)>)>
 }
 
 impl ServiceRegistry {

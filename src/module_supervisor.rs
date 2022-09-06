@@ -1,12 +1,12 @@
 use std::{collections::HashMap, time::Duration};
 
-use frenezulo::{WorkerMessage, http::{Version, ResponseMetadata}};
+use frenezulo::{WorkerMessage, Version, ResponseMetadata, WorkerSerializer};
 use lunatic::{WasmModule, Process, LunaticError, ProcessConfig, Tag, Mailbox};
 use multimap::MultiMap;
 use serde::{Serialize, Deserialize};
 
 use crate::{service_registry::ServiceRegistryMessage};
-use frenezulo::{ ServiceId, RequestId, http::{Request, Response}};
+use frenezulo::{ ServiceId, RequestId, Request, Response};
 
 pub struct ModuleSupervisor {
     service_id: ServiceId,
@@ -80,7 +80,6 @@ impl ModuleSupervisor {
     }
 }
 
-pub type WorkerSerializer = frenezulo::module_supervisor::WorkerSerializer;
 pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: Process<ServiceRegistryMessage>) -> Process<ModuleSupervisorMessage, WorkerSerializer> {
     println!("starting module supervisor");
     let mut config = ProcessConfig::new().expect("needs to be able to create configs");
