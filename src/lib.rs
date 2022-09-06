@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 
 mod http;
 pub use http::*;
+pub use frenezulo_macros::handler;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct ServiceId {

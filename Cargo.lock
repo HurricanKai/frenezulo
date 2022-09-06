@@ -187,11 +187,20 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bytes",
+ "frenezulo-macros",
  "lunatic 0.11.1",
  "multimap",
  "serde",
  "serde_bytes",
  "submillisecond",
+]
+
+[[package]]
+name = "frenezulo-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -286,15 +295,6 @@ name = "itoa"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
-
-[[package]]
-name = "js-host"
-version = "0.1.0"
-dependencies = [
- "frenezulo",
- "lunatic 0.11.1",
- "serde_bytes",
-]
 
 [[package]]
 name = "js-sys"
