@@ -18,3 +18,11 @@ Due to the nature of WASM this does _not_ pose a security thread to the underlyi
 Each registered service gets one endpoint under it's prefix, for example the service with the prefix `test` serves all requests to `/test/*`, including `/test/` and `/test`.
 
 Only one prefix is reserved at this time, `services`, which is used to manage registered services.
+
+## Performance
+
+- Far below 1ms response times with keep-alive connections, eliminating overhead of establishing the connection
+- With the overhead of establishing the connection ~0.5ms response time at full saturation.
+
+Note that the above times are _not_ for a full TCP accept queue. If the accept queue is saturated newly enqueued requests may experience up to 500ms of delay (at the default accept queue size of 1024).
+This should never happen in real-world scenarios though. Running a load balancer of some kind is critical in production scenarios.
