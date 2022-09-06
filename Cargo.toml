@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.64"
 bytes = "1.2.1"
-generic_error = "0.2.0"
 lunatic = { version = "0.11.1", features = ["msgpack_serializer"]}
 multimap = "0.8.3"
 serde = "1.0.144"
 serde_bytes = "0.11.7"
-submillisecond = "0.2.0-alpha0"
+submillisecond = { version = "0.2.0-alpha0", features = ["json"]}
 
 [patch.crates-io]
 lunatic = { path = "../lunatic-rs"}

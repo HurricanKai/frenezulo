@@ -39,7 +39,7 @@ impl ModuleSupervisor {
         };
 
         let mut config = ProcessConfig::new().expect("needs to be able to create configs");
-        config.set_max_memory(1024 * 1024 * 1024);
+        config.set_max_memory(1024 * 1024 * 4); // 4kb
 
         let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config_tag::<WorkerMessage, WorkerSerializer>(
             "random_bullshit_go", Some(&config), Some(request_id.tag), &[]);
