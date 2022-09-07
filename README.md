@@ -5,7 +5,7 @@ A WASM-embedding webserver build on top of [submillisecond](https://github.com/l
 Build to serve as an entry point for microservices compiled to WASM.
 By utilizing WASM isolation it can scale services down to zero or up to infinity, depending on demand.
 
-Note: At this time some changes to upstream repositories are required, primarily the upstream [lunatic-rs](https://github.com/lunatic-solutions/lunatic-rs) does not expose a function to spawn WASM modules with a tag & configuration, which is required.
+~~Note: At this time some changes to upstream repositories are required, primarily the upstream [lunatic-rs](https://github.com/lunatic-solutions/lunatic-rs) does not expose a function to spawn WASM modules with a tag & configuration, which is required.~~ This has been resolved. Frenezulo can run on the latest stable upstream versions.
 
 Services can be registered locally, or added via an endpoint (/services/add)
 
