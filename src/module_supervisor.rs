@@ -38,11 +38,11 @@ impl ModuleSupervisor {
             body: "Service timed out".to_owned().into_bytes()
         };
 
-        let mut config = ProcessConfig::new().expect("needs to be able to create configs");
+        let mut config = ProcessConfig::new();
         config.set_max_memory(1024 * 1024 * 4); // 4kb
 
-        let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config_tag::<WorkerMessage, WorkerSerializer>(
-            "frenezulo_main", Some(&config), Some(request_id.tag), &[]);
+        let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config::<WorkerMessage, WorkerSerializer>(
+            "frenezulo_main", &[], &config, request_id.tag);
         match new_worker {
             Ok(worker) => {
                 self.outstanding_requests.insert(request_id, worker.clone());
@@ -82,7 +82,7 @@ impl ModuleSupervisor {
 
 pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: Process<ServiceRegistryMessage>) -> Process<ModuleSupervisorMessage, WorkerSerializer> {
     println!("starting module supervisor");
-    let mut config = ProcessConfig::new().expect("needs to be able to create configs");
+    let mut config = ProcessConfig::new();
     config.set_can_spawn_processes(true);
     config.set_can_create_configs(true);
     config.set_can_compile_modules(true);

@@ -188,7 +188,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "frenezulo-macros",
- "lunatic 0.11.1",
+ "lunatic 0.11.2",
  "multimap",
  "serde",
  "serde_bytes",
@@ -249,7 +249,7 @@ name = "hello-world-service"
 version = "0.1.0"
 dependencies = [
  "frenezulo",
- "lunatic 0.11.1",
+ "lunatic 0.11.2",
  "serde_bytes",
 ]
 
@@ -334,7 +334,7 @@ checksum = "dbb5cb5f8c3597fb08fdacc13ee41f24effbc0a1988262d122b5f52ecbef74ed"
 dependencies = [
  "bincode",
  "lunatic-macros 0.10.1",
- "lunatic-test 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lunatic-test",
  "paste",
  "serde",
  "thiserror",
@@ -342,11 +342,13 @@ dependencies = [
 
 [[package]]
 name = "lunatic"
-version = "0.11.1"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef163264f565b0890c05fd38222c1f73344e816e92996990147ffef2a4a8b30f"
 dependencies = [
  "bincode",
  "lunatic-macros 0.11.0",
- "lunatic-test 0.10.1",
+ "lunatic-test",
  "paste",
  "rmp-serde",
  "serde",
@@ -380,17 +382,11 @@ dependencies = [
 [[package]]
 name = "lunatic-macros"
 version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c54cfabfb38a02c44aff1bce0084edbae9906e102c4409b3f9304295b0ec8615"
 dependencies = [
  "convert_case",
  "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "lunatic-test"
-version = "0.10.1"
-dependencies = [
  "quote",
  "syn",
 ]
@@ -622,13 +618,15 @@ dependencies = [
 
 [[package]]
 name = "submillisecond"
-version = "0.2.0-alpha0"
+version = "0.2.0-alpha1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31b91ed6708c599d8670203a8e78a75bc963a3d33bc67eeacb9ad99161cca46b"
 dependencies = [
  "ansi_term",
  "headers",
  "http",
  "httparse",
- "lunatic 0.11.1",
+ "lunatic 0.11.2",
  "lunatic-log",
  "mime",
  "paste",
@@ -641,7 +639,9 @@ dependencies = [
 
 [[package]]
 name = "submillisecond_macros"
-version = "0.2.0"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b56d6224bd5c4726d9e8f4705027c5af4297bb95363866badd5934a116812c7"
 dependencies = [
  "better-bae",
  "lazy_static",

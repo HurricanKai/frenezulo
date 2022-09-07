@@ -173,7 +173,7 @@ impl Listener {
     #[init]
     fn init(_: ProcessRef<Self>, _: ()) -> Self {
         let process = spawn_link!(|| {
-            Application::new_custom(AppHandler { }).serve("0.0.0.0:3000").expect("Server has to start");
+            Application::new(AppHandler { }).serve("0.0.0.0:3000").expect("Server has to start");
         });
         Self(process)
     }
