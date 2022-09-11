@@ -17,6 +17,7 @@ serde = "1.0.144"
 serde_bytes = "0.11.7"
 submillisecond = { version = "0.2.0-alpha0", features = ["json"]}
 frenezulo-macros = { path = "./crates/frenezulo-macros" }
+lunatic-envelop = "1.0.0"
 
 # [patch.crates-io]
 # lunatic = { path = "../lunatic-rs"}

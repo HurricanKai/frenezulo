@@ -8,12 +8,12 @@ use frenezulo::{ ServiceId, RequestId, Request, Response, WorkerSerializer };
 
 type RespondTo = Process<Response>;
 
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum ServiceRegistryMessage {
     StartRequest(RequestId, ServiceId, Request, RespondTo),
     CancelRequest(RequestId, ServiceId),
     CompleteRequest(RequestId, ServiceId, Response),
-    AddService(ServiceId, serde_bytes::ByteBuf),
+    AddService(ServiceId, lunatic_envelop::Envelop),
     DeleteService(ServiceId)
 }
 
@@ -59,7 +59,7 @@ impl ServiceRegistry {
         todo!("Send cancel response");
     }
 
-    pub fn add_service(&mut self, service_id: ServiceId, module_data: Vec<u8>) {
+    pub fn add_service(&mut self, service_id: ServiceId, module_data: lunatic_envelop::Envelop) {
         let worker = module_supervisor::start(
             service_id.tag,
             service_id,
@@ -125,7 +125,7 @@ pub fn start() -> Process<ServiceRegistryMessage> {
                     ServiceRegistryMessage::CompleteRequest(request_id, service_id, response) =>
                         instance.complete_request(request_id, service_id, response),
                     ServiceRegistryMessage::AddService(service_id, module_data) =>
-                        instance.add_service(service_id, module_data.into_vec()),
+                        instance.add_service(service_id, module_data),
                     ServiceRegistryMessage::DeleteService(service_id) =>
                         instance.delete_service(service_id),
                 },
@@ -152,7 +152,7 @@ pub fn cancel_request(request_id: RequestId, service_id: ServiceId) {
 pub fn add_service(service_id: ServiceId, module_data: Vec<u8>) {
     Process::<ServiceRegistryMessage>::lookup("service_registry")
         .expect("service registry has to be online")
-        .send(ServiceRegistryMessage::AddService(service_id, serde_bytes::ByteBuf::from(module_data)))
+        .send(ServiceRegistryMessage::AddService(service_id, lunatic_envelop::create_envelop(module_data)))
 }
 
 pub fn delete_service(service_id: ServiceId) {

@@ -188,7 +188,8 @@ dependencies = [
  "anyhow",
  "bytes",
  "frenezulo-macros",
- "lunatic 0.11.2",
+ "lunatic 0.11.4",
+ "lunatic-envelop",
  "multimap",
  "serde",
  "serde_bytes",
@@ -212,6 +213,12 @@ dependencies = [
  "typenum",
  "version_check",
 ]
+
+[[package]]
+name = "hash-map-id"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32a7efe208bf3f77055b6e56faeb55c6166e3fdc02b9443491b7d76216f9ce04"
 
 [[package]]
 name = "headers"
@@ -249,7 +256,7 @@ name = "hello-world-service"
 version = "0.1.0"
 dependencies = [
  "frenezulo",
- "lunatic 0.11.2",
+ "lunatic 0.11.4",
  "serde_bytes",
 ]
 
@@ -342,17 +349,29 @@ dependencies = [
 
 [[package]]
 name = "lunatic"
-version = "0.11.2"
+version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef163264f565b0890c05fd38222c1f73344e816e92996990147ffef2a4a8b30f"
+checksum = "946d5710624fc8007c58d16c31da9a5db80169e180b20a3901a2af4dd71884a7"
 dependencies = [
  "bincode",
- "lunatic-macros 0.11.0",
+ "lunatic-macros 0.11.4",
  "lunatic-test",
  "paste",
  "rmp-serde",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "lunatic-envelop"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4c4663a874b56bf4eef342c089ee15d9e62360f785039b1db47efd8a809f90c"
+dependencies = [
+ "hash-map-id",
+ "lunatic 0.11.4",
+ "serde",
+ "serde_bytes",
 ]
 
 [[package]]
@@ -381,9 +400,9 @@ dependencies = [
 
 [[package]]
 name = "lunatic-macros"
-version = "0.11.0"
+version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c54cfabfb38a02c44aff1bce0084edbae9906e102c4409b3f9304295b0ec8615"
+checksum = "32f9b31b098de4c99a9f85d30735367d05d5ce0f84cb796f6a5792b4bb8b3a09"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -626,7 +645,7 @@ dependencies = [
  "headers",
  "http",
  "httparse",
- "lunatic 0.11.2",
+ "lunatic 0.11.4",
  "lunatic-log",
  "mime",
  "paste",

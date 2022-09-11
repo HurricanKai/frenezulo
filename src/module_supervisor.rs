@@ -38,7 +38,7 @@ impl ModuleSupervisor {
             body: "Service timed out".to_owned().into_bytes()
         };
 
-        let mut config = ProcessConfig::new();
+        let mut config = ProcessConfig::new().expect("needs to create configs");
         config.set_max_memory(1024 * 1024 * 4); // 4kb
 
         let new_worker : Result<Process<WorkerMessage, WorkerSerializer>, LunaticError> = self.module.spawn_link_config::<WorkerMessage, WorkerSerializer>(
@@ -80,9 +80,9 @@ impl ModuleSupervisor {
     }
 }
 
-pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: Process<ServiceRegistryMessage>) -> Process<ModuleSupervisorMessage, WorkerSerializer> {
+pub fn start(tag: Tag, service_id: ServiceId, module_data: lunatic_envelop::Envelop, supervisor: Process<ServiceRegistryMessage>) -> Process<ModuleSupervisorMessage, WorkerSerializer> {
     println!("starting module supervisor");
-    let mut config = ProcessConfig::new();
+    let mut config = ProcessConfig::new().expect("Needs to be able to create configs");
     config.set_can_spawn_processes(true);
     config.set_can_create_configs(true);
     config.set_can_compile_modules(true);
@@ -94,7 +94,8 @@ pub fn start(tag: Tag, service_id: ServiceId, module_data: Vec<u8>, supervisor: 
         let me = mailbox.this();
         let mailbox = mailbox.catch_link_failure();
         println!("compiling module {me:?}");
-        let module = WasmModule::new(&module_data);
+        let data = lunatic_envelop::open_envelop(module_data);
+        let module = WasmModule::new(&data);
         if let Err(e) = module {
             println!("Failed to compile {e:?}");
             panic!("Failed to compile {e:?}");
