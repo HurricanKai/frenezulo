@@ -364,9 +364,9 @@ dependencies = [
 
 [[package]]
 name = "lunatic-envelop"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4c4663a874b56bf4eef342c089ee15d9e62360f785039b1db47efd8a809f90c"
+checksum = "04dc435c43db4630ab2747f8a7c0df93ae8a4eef9b3e893fad58ee6377773edf"
 dependencies = [
  "hash-map-id",
  "lunatic 0.11.4",
@@ -484,9 +484,9 @@ checksum = "b1de2e551fb905ac83f73f7aedf2f0cb4a0da7e35efa24a202a936269f1f18e1"
 
 [[package]]
 name = "percent-encoding"
-version = "2.1.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
 name = "proc-macro-error"
